@@ -1,0 +1,38 @@
+{
+  "name": "one",
+  "version": "1.0.0",
+  "description": " A JavaScript library for WebGL",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "reload": "livereload 'build/'",
+    "watch": "npm-run-all --parallel reload dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arfly/ONE.git"
+  },
+  "keywords": [
+    "WebGL",
+    "3D"
+  ],
+  "author": "fly",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Arfly/ONE/issues"
+  },
+  "homepage": "https://github.com/Arfly/ONE#readme",
+  "devDependencies": {
+    "livereload": "^0.6.2",
+    "npm-run-all": "^4.0.2",
+    "rollup": "^0.41.6",
+    "rollup-plugin-json": "^2.1.1",
+    "rollup-watch": "^3.2.2"
+  }
+}
