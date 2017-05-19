@@ -34,17 +34,49 @@
         "}\n"
     ].join('');
 
-    var vertexShaderSource = gl.createShader(gl.VERTEX_SAHDER);
-    var fragmentShaderSource = gl.createShader(gl.FRAGMENT_SHADER);
+    var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 
-    gl.shaderSource(vertexShaderSource, vertexShaderText);
-    gl.shaderSource(fragmentShaderSource, fragmentShaderText);
+    gl.shaderSource(vertexShader, vertexShaderText);
+    gl.shaderSource(fragmentShader, fragmentShaderText);
 
-    gl.compileShader(vertexShaderSource);
-    gl.compileShader(fragmentShaderSource);
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+
+    var program = gl.createProgram();
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    var v3PositionIndex = 0;
+
+    gl.bindAttribLocation(program,v3PositionIndex,'v3Position');
+
+    gl.linkProgram(program);
+
+    gl.useProgram(program);
+
+    var dataArray = [
+         0.0,  1.0,  0.0,
+        -1.0, -1.0,  0.0,
+         1.0,  0.0,  0.0
+    ];
+
+    var data = new Float32Array(dataArray);
+
+    var buffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(v3PositionIndex);
+
+    gl.vertexAttribPointer(v3PositionIndex, 3, gl.FLOAT, false, 0, 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     
-
 
 
 </script>
