@@ -58,6 +58,7 @@ function WebGLRenderer ( domEle ) {
     this.context = _gl;
     this.domEle = _canvas;
     this.count = 0;
+    this.stereo = false;
 
     
 }
@@ -79,12 +80,42 @@ WebGLRenderer.prototype = {
 
         var _gl = this.context;
 
-        _gl.clearColor(0,0,0,1);
+        if ( this.stereo ) {//test code
 
-        _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
-        
-        _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
-        
+            _gl.enable( _gl.SCISSOR_TEST );
+
+            _gl.clearColor(0,0,0,1);
+
+            _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+
+            _gl.scissor( 0,0, window.innerWidth / 2, window.innerHeight );
+            
+            _gl.viewport( 0, 0, window.innerWidth / 2, window.innerHeight );
+            
+            _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+            // _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+
+            _gl.scissor( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
+            
+            _gl.viewport( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
+            
+            _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+        } else {
+
+            _gl.disable( _gl.SCISSOR_TEST );
+
+            _gl.clearColor(0,0,0,1);
+
+            _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+
+            _gl.viewport( 0, 0, window.innerWidth, window.innerHeight );
+            
+            _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+        }
+
     },
 
     setSize: function ( width, height ) {
