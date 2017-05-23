@@ -2,91 +2,95 @@ ONE.CtrD = function ( camera ) {
 
     var _this = this;
 
-    
-
-    this.keyDown = false;
-    this.lastX = 0;
-    this.lastY = 0;
+    this.fov = 75;
     this.camera = camera;
-    
-    this.alpha = 0;
-    this.beta = 0;
-    this.gamma = 0;
-    
-    camera.position.set( 0, 0, 0 );
-    camera.target.set( 0, 0, 1 );
-
-    document.addEventListener( 'mouseover', function ( e ) {
-
-        e.target.style.cursor = '-webkit-grab';
-
-    }, false );
-
-    document.addEventListener( 'mousedown', _this.handleMouseDown.bind(this), false );
-
-    document.addEventListener( 'mousemove', _this.handleMouseMove.bind(this), false );
-
-    document.addEventListener( 'mouseup', _this.handleMouseUp.bind(this), false );
-
-    // this.alphaTxt = document.getElementById('alpha');
-    // this.betaTxt = document.getElementById('beta');
-    // this.gammaTxt = document.getElementById('gamma');
+    this.on = false;
+    this.gON = false;
+    this.alphaTxt = document.getElementById('alpha');
+    this.betaTxt = document.getElementById('beta');
+    this.gammaTxt = document.getElementById('gamma');
+    this.screenOrientation = 0;
 
     window.addEventListener( 'deviceorientation', _this.handleOrientationchange.bind(this), false );
+    window.addEventListener( 'orientationchange', _this.ScreenOrientationChange.bind(this), false );
 
+    window.addEventListener( 'devicemotion', _this.handleDeviceMotion.bind(this), false );
+    
 }
 
 ONE.CtrD.prototype = {
 
-    handleMouseDown: function ( e ) {
+    init: function () {
 
-        e.target.style.cursor = "-webkit-grabbing";
-        this.keyDown = true;
-        this.lastX = e.pageX;
-        this.lastY = e.pageY;
-
-        
-    },
-
-    handleMouseMove: function ( e ) {
-
-        if ( this.keyDown ) {
-
-            var deltaX = this.lastX - e.pageX;
-            var deltaY = e.pageY - this.lastY;
-
-            this.alpha += deltaY  / 10 * Math.PI / 180;
-            this.alpha = Math.max(Math.min(Math.PI / 2 * 0.98, this.alpha ), -Math.PI / 2 * 0.98);
-            this.beta += deltaX / 20 * Math.PI / 180;
-            this.gamme = 0;
-            
-            // this.alphaTxt.value = this.alpha * 180 / Math.PI;
-            // this.betaTxt.value = this.beta * 180 / Math.PI;
-            // this.gammaTxt.value = this.gamma * 180 / Math.PI;
-
-            this.camera.target.x = Math.cos( this.alpha ) * Math.sin( this.beta );
-            this.camera.target.y = Math.sin( this.alpha);
-            this.camera.target.z = Math.cos( this.alpha ) * Math.cos( this.beta );
-
-            this.lastX = e.pageX;
-            this.lastY = e.pageY;
-
-        }
-        
-    },
-
-    handleMouseUp: function ( e ) {
-
-        e.target.style.cursor = "-webkit-grab";
-        this.keyDown = false;
+        this.camera.position.set( 0, 0, 0 );
+        this.camera.target.set( 0, -1, 0 );
+        this.camera.up.set( 0, 0, -1 );
+        this.camera.fov = this.fov;
 
     },
 
     handleOrientationchange: function ( e ) {
 
-        this.alphaTxt.value = e.alpha;
-        this.betaTxt.value = e.beta;
-        this.gammaTxt.value = e.gamma;
+        if ( this.on && e.alpha ) {
+
+            var alpha = parseFloat( e.alpha.toFixed(1)) * Math.PI / 180;
+            var beta = parseFloat( e.beta.toFixed(1)) * Math.PI / 180;
+            var gamma = parseFloat( e.gamma.toFixed(1)) * Math.PI / 180;
+
+            var euler = new ONE.Euler( beta, alpha, -gamma, 'YXZ');
+
+            var R = new ONE.Matrix4();
+
+            R.makeRotationFromEuler( euler );
+
+            // var R1 = new ONE.Matrix4();
+            // R1.setRotate( -90, 1, 0, 0 );
+
+            // R.multiply(R1);
+
+            // R.multiply( R2 );
+            
+            var orientR = new ONE.Matrix4();
+
+            orientR.setRotate( -this.screenOrientation, 0, 1, 0 );
+
+            R.multiply( orientR );
+
+            var target = new ONE.Vector3( 0, -1, 0);
+
+            target.applyMatrix4(R);
+            
+            this.camera.target.x = target.x;
+            this.camera.target.y = target.y;
+            this.camera.target.z = target.z;
+
+            this.alphaTxt.value = parseFloat( e.alpha.toFixed(1));
+            this.betaTxt.value = parseFloat( e.beta.toFixed(1));
+            this.gammaTxt.value = parseFloat( e.gamma.toFixed(1));
+             
+            var X = new ONE.Vector3( 1, 0, 0 );
+            
+            var Y = new ONE.Vector3( 0, 1, 0 );
+
+            var Z = new ONE.Vector3( 0, 0, -1 );
+            
+            Z.applyMatrix4( R ).normalize();
+
+            this.camera.up.x = Z.x;
+            this.camera.up.y = Z.y;
+            this.camera.up.z = Z.z;
+
+
+        }
+    },
+
+    ScreenOrientationChange: function () {
+
+        this.screenOrientation = window.orientation || 0;
+
+    },
+
+    handleDeviceMotion: function ( e ) {
 
     }
 

@@ -88,19 +88,43 @@ WebGLRenderer.prototype = {
 
             _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
 
-            _gl.scissor( 0,0, window.innerWidth / 2, window.innerHeight );
-            
-            _gl.viewport( 0, 0, window.innerWidth / 2, window.innerHeight );
-            
-            _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+            if ( window.innerWidth > window.innerHeight ) {
 
-            // _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+                _gl.scissor( 0,0, window.innerWidth / 2, window.innerHeight );
+            
+                _gl.viewport( 0, 0, window.innerWidth / 2, window.innerHeight );
+                
+                _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
 
-            _gl.scissor( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
-            
-            _gl.viewport( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
-            
-            _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+                // _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+
+                _gl.scissor( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
+                
+                _gl.viewport( window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight );
+                
+                _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+            }
+
+            if ( window.innerHeight > window.innerWidth ) {
+
+                _gl.scissor( 0,0, window.innerWidth, window.innerHeight / 2 );
+        
+                _gl.viewport( 0, 0, window.innerWidth, window.innerHeight / 2 );
+                
+                _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+                // _gl.clear( _gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT );
+
+                _gl.scissor( 0, window.innerHeight / 2, window.innerWidth, window.innerHeight );
+                
+                _gl.viewport( 0, window.innerHeight / 2, window.innerWidth, window.innerHeight );
+                
+                _gl.drawArrays( _gl.TRIANGLES, 0, this.count );
+
+            }
+
+           
 
         } else {
 
