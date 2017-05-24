@@ -13,6 +13,7 @@ ONE.CtrA = function ( camera ) {
     this.distance = 0.02;
     this.screenOrientation = 0;
     this.fov = 75;
+    this.landscapeR = 0;
 
     this.on = false;
     this.gON = false;
@@ -53,9 +54,36 @@ ONE.CtrA.prototype = {
 
     init: function () {
 
-        this.camera.fov = this.fov;
-        this.camera.position.set( 0, 0, 0.02 );
+        var initFov;
+        var initDis;
+
+        if ( this.camera.fov !== this.fov ) {
+
+            util.lerp( this.camera, 'fov', this.fov );
+
+        }
+
+        if ( Math.sqrt( this.camera.position.lengthSq() ) !== 0.01 ) {
+
+            var start = {
+
+                x: this.camera.position.x,
+                y: this.camera.position.y,
+                z: this.camera.position.z
+            }
+
+            var target = {
+
+                x: Math.sqrt( 0.01 ) * start.x / Math.sqrt( start.x * start.x + start.z * start.z ) || 0,
+                y: 0,
+                z: Math.sqrt( 0.01 ) * start.z / Math.sqrt( start.x * start.x + start.z * start.z ) || 0.01
+            }
+
+            util.lerpVector( this.camera, 'position', target )
+        }
+
         this.camera.target.set( 0, 0, 0);
+        this.camera.up.set( 0, 1, 0 );
 
     },
 
@@ -72,9 +100,15 @@ ONE.CtrA.prototype = {
 
         }
 
-       
 
-        
+        if ( this.on && this.gON ) {
+
+            this.keyDown = true;
+            this.lastX = e.pageX;
+            this.lastY = e.pageY;
+
+        }
+
     },
 
     handleMouseMove: function ( e ) {
@@ -95,10 +129,42 @@ ONE.CtrA.prototype = {
                 this.lastDeltaX = deltaX;
                 this.lastDeltaY = deltaY;
 
-                this.camera.position.x = this.distance * Math.cos( this.alpha ) * Math.sin( this.beta );
-                this.camera.position.y = this.distance * Math.sin( this.alpha);
-                this.camera.position.z = this.distance * Math.cos( this.alpha ) * Math.cos( this.beta );
+                this.camera.position.x = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.sin( this.beta );
+                this.camera.position.y = Math.sqrt(this.distance) * Math.sin( this.alpha);
+                this.camera.position.z = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.cos( this.beta );
 
+                this.lastX = e.pageX;
+                this.lastY = e.pageY;
+
+            }
+
+        }
+
+        if ( this.on && this.gON ) {
+
+            e.preventDefault();
+            if ( this.keyDown) {
+                
+                if ( Math.abs( this.camera.up.x) < Math.abs( this.camera.up.y) ) {
+
+                    var deltaX = Math.abs(e.pageX - this.lastX) > 3 ? (e.pageX - this.lastX):0;
+
+                    this.landscapeR += deltaX / 10;
+
+                }
+
+                if ( Math.abs( this.camera.up.y) < Math.abs( this.camera.up.x) ) {
+
+                    var deltaY = Math.abs(e.pageY - this.lastY) > 3 ? (e.pageY - this.lastY):0;
+
+                    this.landscapeR += deltaY / 10;
+
+                }
+
+                var R = this.beta * 180 / Math.PI + this.landscapeR;
+
+                this.camera.modelMatrix.setRotate( -R, 0, 1, 0);
+            
                 this.lastX = e.pageX;
                 this.lastY = e.pageY;
 
@@ -118,6 +184,13 @@ ONE.CtrA.prototype = {
             this.keyDown = false;
             this._tick();
 
+        } 
+
+        if ( this.on && this.gON ) {
+
+            e.preventDefault();
+            this.keyDown = false;
+
         }        
 
     },
@@ -133,7 +206,7 @@ ONE.CtrA.prototype = {
             var alpha = parseFloat( e.alpha.toFixed(1));
             var beta = parseFloat( e.beta.toFixed(1));
             var gamma = parseFloat( e.gamma.toFixed(1));
-            
+        
             var euler = new ONE.Euler( beta * Math.PI / 180, alpha * Math.PI / 180, -gamma * Math.PI / 180, 'YXZ');
 
             var R = new ONE.Matrix4();
@@ -154,14 +227,29 @@ ONE.CtrA.prototype = {
 
             target.applyMatrix4(R);
 
-            var len = Math.sqrt(this.distance);
-
-            this.camera.position.x = target.x * len;
-            this.camera.position.y = target.y * len;
-            this.camera.position.z = target.z * len;
+            this.camera.position.x = target.x * Math.sqrt(this.distance);
+            this.camera.position.y = target.y * Math.sqrt(this.distance);
+            this.camera.position.z = target.z * Math.sqrt(this.distance);
 
             this.alpha = Math.asin( target.y );
-            this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) );
+            
+            if ( target.z >= 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) );
+
+            }
+
+            if ( target.z < 0 && target.x > 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) ) + Math.PI / 2;
+
+            }
+
+            if ( target.z < 0 && target.x < 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) ) + Math.PI / 2 - Math.PI / 2;
+
+            }
 
             var Z = new ONE.Vector3( 0, 0, -1 );
             Z.applyMatrix4( R ).normalize();
@@ -190,11 +278,11 @@ ONE.CtrA.prototype = {
 
             this.distance += event.deltaY * 0.025;
 
-            this.distance = Math.max( 0.01, Math.min( 3, this.distance ) );
+            this.distance = Math.max( 0.01, Math.min( 2, this.distance ) );
 
-            this.camera.position.x = this.distance * Math.cos( this.alpha ) * Math.sin( this.beta );
-            this.camera.position.y = this.distance * Math.sin( this.alpha);
-            this.camera.position.z = this.distance * Math.cos( this.alpha ) * Math.cos( this.beta );
+            this.camera.position.x = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.sin( this.beta );
+            this.camera.position.y = Math.sqrt(this.distance) * Math.sin( this.alpha);
+            this.camera.position.z = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.cos( this.beta );
 
             this.camera.near = this.distance;
 
@@ -210,7 +298,7 @@ ONE.CtrA.prototype = {
             if ( e.scale < 1 ) {
                 
                 this.distance += 0.08;
-                this.distance = Math.max( 0.01, Math.min( 3, this.distance ) );
+                this.distance = Math.max( 0.01, Math.min( 2, this.distance ) );
                 console.log(this.distance);
 
             }
@@ -218,12 +306,14 @@ ONE.CtrA.prototype = {
             if ( e.scale > 1 ) {
 
                 this.distance -= 0.08;
-                this.distance = Math.max( 0.01, Math.min( 3, this.distance ) );
+                this.distance = Math.max( 0.01, Math.min( 2, this.distance ) );
                 console.log(this.distance);
 
             }
 
             this.camera.near = this.distance;
+
+            console.log(this.camera);
 
         } 
 
@@ -243,9 +333,9 @@ ONE.CtrA.prototype = {
             this.alpha = Math.max(Math.min(Math.PI / 2 * 0.98, this.alpha ), -Math.PI / 2 * 0.98);
             this.beta += this.lastDeltaX / 10 * Math.PI / 180;
 
-            this.camera.position.x = this.distance * Math.cos( this.alpha ) * Math.sin( this.beta );
-            this.camera.position.y = this.distance * Math.sin( this.alpha);
-            this.camera.position.z = this.distance * Math.cos( this.alpha ) * Math.cos( this.beta );
+            this.camera.position.x = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.sin( this.beta );
+            this.camera.position.y = Math.sqrt(this.distance) * Math.sin( this.alpha);
+            this.camera.position.z = Math.sqrt(this.distance) * Math.cos( this.alpha ) * Math.cos( this.beta );
 
             clearTimeout( this._tick );
 

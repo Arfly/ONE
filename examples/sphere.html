@@ -125,7 +125,7 @@
         <span class="angleName">Beta</span><input type="" name="beta" id='beta'>
         <span class="angleName">Gamma</span><input type="" name="gamma" id='gamma'>
     </div>
-    
+    <script type="text/javascript" src="./js/utils.js"></script>
     <script type="text/javascript" src="../build/one.js"></script>
     <script type="text/javascript" src="./js/CtrA.js"></script>
     <script type="text/javascript" src="./js/CtrB.js"></script>
@@ -159,7 +159,7 @@
             textureUrl = './res/test.jpg';
 
         var camera = new ONE.PerspectiveCamera( cameraOpt.fovy, cameraOpt.aspect, cameraOpt.near, cameraOpt.far );
-        camera.position.set( 0, 0, 0.02 );
+        camera.position.set( 0, 0, 0.01 );
         camera.target.set( 0, 0, 0);
 
         var ctrA = new ONE.CtrA( camera ),

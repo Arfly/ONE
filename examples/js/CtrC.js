@@ -12,7 +12,7 @@ ONE.CtrC = function ( camera ) {
     this.gamma = 0;
     this.distance = 1;
     this.fov = 150;
-    
+    this.landscapeR = 0;
 
     this.on = false;
     this.gON = false;
@@ -51,10 +51,43 @@ ONE.CtrC = function ( camera ) {
 ONE.CtrC.prototype = {
 
     init: function () {
-         this.camera.near = 0.01;
-        this.camera.fov = this.fov;
-        this.camera.position.set( 0, Math.sin( Math.PI / 2 * 0.98 ), Math.cos( Math.PI / 2 * 0.98 ) );
-        this.camera.target.set( 0, 0, 0);
+
+        var initFov;
+        
+        if ( this.camera.fov !== this.fov ) {
+
+            initFov = util.lerp( this.camera, 'fov', this.fov );
+
+        }
+
+        if ( initFov ) {
+
+            initFov();
+
+        }
+
+        if ( Math.sqrt( this.camera.position.lengthSq() ) !== 1 || this.camera.position.y !== Math.sin( Math.PI / 2 * 0.98 ) ) {
+
+            var start = {
+
+                x: this.camera.position.x,
+                y: this.camera.position.y,
+                z: this.camera.position.z
+            }
+
+            var target = {
+
+                x: Math.sqrt( Math.cos( Math.PI / 2 * 0.98 ) ) * start.x / Math.sqrt( start.x * start.x + start.z * start.z ) || 0,
+                y: Math.sin( Math.PI / 2 * 0.98 ),
+                z: Math.sqrt( Math.cos( Math.PI / 2 * 0.98 ) ) * start.z / Math.sqrt( start.x * start.x + start.z * start.z ) || Math.cos( Math.PI / 2 * 0.98 )
+            }
+
+            util.lerpVector( this.camera, 'position', target )
+        }
+
+        this.camera.near = 0.01;
+        this.camera.target.set( 0, 0, 0 );
+        this.camera.up.set( 0, 1, 0 );
 
     },
 
@@ -68,6 +101,14 @@ ONE.CtrC.prototype = {
             this.lastX = e.pageX;
             this.lastY = e.pageY;
             this.camera.up.set( 0, 1, 0 );
+
+        }
+
+        if ( this.on && this.gON ) {
+
+            this.keyDown = true;
+            this.lastX = e.pageX;
+            this.lastY = e.pageY;
 
         }
         
@@ -106,6 +147,38 @@ ONE.CtrC.prototype = {
 
 
         }
+
+        if ( this.on && this.gON ) {
+
+            e.preventDefault();
+            if ( this.keyDown) {
+                
+                if ( Math.abs( this.camera.up.x) < Math.abs( this.camera.up.y) ) {
+
+                    var deltaX = Math.abs(e.pageX - this.lastX) > 3 ? (e.pageX - this.lastX):0;
+
+                    this.landscapeR += deltaX / 10;
+
+                }
+
+                if ( Math.abs( this.camera.up.y) < Math.abs( this.camera.up.x) ) {
+
+                    var deltaY = Math.abs(e.pageY - this.lastY) > 3 ? (e.pageY - this.lastY):0;
+
+                    this.landscapeR += deltaY / 10;
+
+                }
+
+                var R = this.beta * 180 / Math.PI + this.landscapeR;
+
+                this.camera.modelMatrix.setRotate( -R, 0, 1, 0);
+            
+                this.lastX = e.pageX;
+                this.lastY = e.pageY;
+
+            }
+
+        }
         
         
     },
@@ -118,6 +191,13 @@ ONE.CtrC.prototype = {
             e.target.style.cursor = "-webkit-grab";
             this.keyDown = false;
             this._tick();
+
+        }
+
+        if ( this.on && this.gON ) {
+
+            e.preventDefault();
+            this.keyDown = false;
 
         }
        
@@ -154,7 +234,23 @@ ONE.CtrC.prototype = {
             this.camera.position.z = target.z;
 
             this.alpha = Math.asin( target.y );
-            this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) );
+            if ( target.z >= 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) );
+
+            }
+
+            if ( target.z < 0 && target.x > 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) ) + Math.PI / 2;
+
+            }
+
+            if ( target.z < 0 && target.x < 0 ) {
+
+                this.beta = Math.asin( target.x / Math.sqrt( target.x * target.x + target.y * target.y ) ) + Math.PI / 2 - Math.PI / 2;
+
+            }
 
             var Z = new ONE.Vector3( 0, 0, -1 );
             Z.applyMatrix4( R ).normalize();
